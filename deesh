@@ -1,17 +1,10 @@
 #!/bin/bash
 
-#ls | wc -l; echo "" ;ls | tail -n3
-
-dir="${HOME}/Musique/deesh/"
-
-archives_id=("10240340962" "10240340502" "10240338942" "10212303502" \
-		"10212302862" "10465819782")
-
-test_id=("11199853444", "11199852304")
+source database.sh
 
 execute_deemix () {
 	echo https://www.deezer.com/us/playlist/$1
-	deemix -p $dir https://www.deezer.com/us/playlist/$1
+	deemix -p $dl_dir https://www.deezer.com/us/playlist/$1
 	echo
 }
 
@@ -29,25 +22,58 @@ dl_test () {
 	done
 }
 
-if [ "$1" = "archives" ]; then
-	dl_archives
-elif [ "$1" = "test" ]; then
-	dl_test
-else
-	echo "No valid argument : $1"
-	exit 2
-fi
+dl_night () {
+	for str in ${night_id[@]}; do
+		echo "--- DOWNLOAD NIGHT ---"
+		execute_deemix $str
+	done
+}
 
-echo -e "--- LOG ---\n" > ${dir}log
+dl_soiree () {
+	for str in ${soiree_id[@]}; do
+		echo "--- DOWNLOAD SOIREE ---"
+		execute_deemix $str
+	done
+}
 
-for subdir in "$dir"/*; do
-	if [ -d "$subdir" ]; then
-    # Boucle à travers chaque fichier dans le sous-dossier
-		for file in "$subdir"/*; do
-			if [ -f "$file" ] && [ "$file" == "$subdir/errors.txt" ]; then
-				cat "$file" >> ${dir}log
-				echo "--- ERRORS in $subdir --- (see ${dir}log)"
-			fi
-		done
+dl_rap_us () {
+	for str in ${rap_us_id[@]}; do
+		echo "--- DOWNLOAD RAP US ---"
+		execute_deemix $str
+	done
+}
+
+dee_main () {
+	if [ "$1" = "archives" ]; then
+		dl_archives
+	elif [ "$1" = "night" ]; then
+		dl_night
+	elif [ "$1" = "rap_us" ]; then
+		dl_rap_us
+	elif [ "$1" = "soiree" ]; then
+		dl_soiree
+	elif [ "$1" = "test" ]; then
+		dl_test
+	else
+		echo "No valid argument : $1"
+		exit 2
 	fi
-done
+}
+
+dee_check_errors () {
+	echo -e "--- LOG ---\n" > ${dir}log
+
+	for subdir in "$dl_dir"*; do
+		if [ -d "$subdir" ]; then
+			for file in "$subdir"/*; do
+				if [ -f "$file" ] && [ "$file" == "$subdir/errors.txt" ]; then
+					cat "$file" >> ${dl_dir}log
+					echo "--- ERRORS in $subdir --- (see ${dl_dir}log)"
+				fi
+			done
+		fi
+	done
+}
+
+dee_main $1
+dee_check_errors
